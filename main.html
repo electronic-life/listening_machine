@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listening Machine - Cycling Thoughts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'Supreme Variable';
+            src:
+                url('fonts/Supreme-Variable.woff2') format('woff2'),
+                url('fonts/Supreme-Variable.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'Supreme Variable', sans-serif;
+        }
+
+        #settingsToggle {
+            cursor: pointer;
+            user-select: none;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #settingsToggle svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            transition: transform 0.3s ease;
+        }
+
+        #settingsContainer {
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+            max-height: 500px;
+        }
+
+        #settingsContainer.hidden {
+            max-height: 0;
+        }
+
+        #settingsToggle .arrow-down {
+            transform: rotate(0deg);
+        }
+
+        #settingsToggle .arrow-up {
+            transform: rotate(180deg);
+        }
+
+        #transcriptContainer {
+            min-height: 150px;
+            border: 1px solid #e2e8f0;
+            background-color: #f7fafc;
+            max-height: 30vh;
+            overflow-y: auto;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        #summaryContainer {
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            border: 1px solid #e2e8f0;
+            background-color: #f7fafc;
+            max-height: 40vh;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cycling-thought {
+            opacity: 0;
+            font-size: 1.5rem;
+            font-weight: 500;
+            line-height: 1.6;
+            padding: 10px 18px;
+            color: #1f2937;
+            background-color: rgba(209, 213, 219, 0.7);
+            border-radius: 8px;
+            white-space: normal;
+            text-align: center;
+            cursor: default;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+
+        @keyframes thoughtCycleEffect {
+            0% {
+                opacity: 0;
+                transform: scale(0.9) translateY(10px);
+            }
+
+            20% {
+                opacity: 1;
+                transform: scale(1) translateY(0px);
+            }
+
+            80% {
+                opacity: 1;
+                transform: scale(1) translateY(0px);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.95) translateY(5px);
+            }
+        }
+
+        #summaryContainer p.placeholder-text,
+        #summaryContainer p.error-text,
+        #summaryContainer p.warning-text {
+            text-align: center;
+            width: 80%;
+            color: #718096;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+
+        #summaryContainer p.error-text {
+            color: #dc2626;
+            font-weight: 500;
+        }
+
+        #summaryContainer p.warning-text {
+            color: #f97316;
+            font-weight: 500;
+        }
+
+        .transcript-entry {
+            border-bottom: 1px dashed #cbd5e0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+            word-wrap: break-word;
+        }
+
+        .transcript-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        #status,
+        #summaryStatus {
+            font-style: italic;
+            color: #718096;
+            min-height: 1.5em;
+        }
+
+        .control-button {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            border-radius: 0.375rem;
+            border: 1px solid #6b7280;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            background-color: #f9fafb;
+            color: #374151;
+            cursor: pointer;
+        }
+
+        .control-button:hover {
+            background-color: #f3f4f6;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .control-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .summary-heading {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        #testInputArea {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            width: 100%;
+            resize: vertical;
+            min-height: 60px;
+            box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fefcbf;
+            color: #92400e;
+            padding: 1rem;
+            border: 1px solid #fde68a;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        #downloadButton {
+            background-color: #10b981;
+            color: white;
+            border-color: #059669;
+        }
+
+        #downloadButton:hover {
+            background-color: #059669;
+        }
+
+        #downloadButton:disabled {
+            background-color: #6ee7b7;
+            border-color: #a7f3d0;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-inter">
+
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-3xl">
+        <h1 class="text-2xl md:text-3xl font-bold mb-6 text-center text-gray-800">LISTENING MACHINE</h1>
+
+        <div id="messageBox" class="message-box"></div>
+
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="initialStartButton" class="control-button">Start Listening</button>
+            <button id="pauseButton" class="control-button hidden">Pause</button>
+            <button id="downloadButton" class="control-button" disabled>Download Transcript</button>
+        </div>
+
+        <div id="status" class="text-center mb-4 text-gray-600">Status: Idle</div>
+
+        <h2 class="text-lg font-semibold mb-2 text-gray-700 mt-4">Thoughts</h2>
+        <div id="summaryStatus" class="text-center mb-2 text-gray-600 text-sm">
+            Requires API Key. Updates periodically.
+        </div>
+        <div id="summaryContainer" class="w-full">
+            <p class="placeholder-text">Generated thoughts will appear here...</p>
+        </div>
+
+        <h2 class="text-lg font-semibold mb-2 text-gray-700 mt-6">Transcript</h2>
+        <div id="transcriptContainer" class="w-full">
+            <p class="text-gray-500">Configure your API Key in `config.js`, then "Start Listening" or use Test Input.
+            </p>
+        </div>
+
+        <h2 class="text-lg font-semibold mt-6 mb-2 text-gray-700">Test Input (No Mic Needed)</h2>
+        <div class="mb-2">
+            <textarea id="testInputArea"
+                placeholder="Type text here and click 'Add Text' to simulate speech..."></textarea>
+        </div>
+        <div class="flex justify-end">
+            <button id="addTextButton" class="control-button">Add Text</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+
+    <script>
+        // --- DOM Elements ---
+        const initialStartButton = document.getElementById('initialStartButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const transcriptContainer = document.getElementById('transcriptContainer');
+        const statusDiv = document.getElementById('status');
+        const summaryContainer = document.getElementById('summaryContainer');
+        const summaryStatusDiv = document.getElementById('summaryStatus');
+        const testInputArea = document.getElementById('testInputArea');
+        const addTextButton = document.getElementById('addTextButton');
+        const messageBox = document.getElementById('messageBox');
+
+        // --- Web Speech API Setup ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isPaused = false;
+        let isRunning = false;
+
+        // --- LLM Summary Setup ---
+        const API_URL = "https://api.anthropic.com/v1/messages";
+        const MODEL_NAME = "claude-3-haiku-20240307";
+        let summaryIntervalId = null;
+        let accumulatedTranscript = "";
+        let lastSummaryTime = 0;
+        const SUMMARY_INTERVAL = 60000;
+        let transcriptCleared = true;
+        let isSummarizing = false;
+        const CONTEXT_FILE_PATH = 'context.txt';
+
+        // --- Full Conversation Log for Download ---
+        let conversationLog = "";
+
+        // --- Thought Cycling Globals ---
+        let activeThoughtsList = [];
+        let currentThoughtDisplayIndex = 0;
+        let thoughtDisplayIntervalId = null;
+        const THOUGHT_CYCLE_INTERVAL = 20000;
+        let thoughtDisplayElement = null;
+
+        // --- Utility Functions ---
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            if (type === 'error') { messageBox.style.backgroundColor = '#fee2e2'; messageBox.style.color = '#991b1b'; messageBox.style.borderColor = '#fecaca'; }
+            else if (type === 'warning') { messageBox.style.backgroundColor = '#ffedd5'; messageBox.style.color = '#9a3412'; messageBox.style.borderColor = '#fed7aa'; }
+            else { messageBox.style.backgroundColor = '#fefcbf'; messageBox.style.color = '#92400e'; messageBox.style.borderColor = '#fde68a'; }
+            messageBox.style.display = 'block';
+            setTimeout(() => { messageBox.style.display = 'none'; }, 5000);
+        }
+
+        function setSummaryContainerMessage(message, type = 'placeholder') {
+            if (thoughtDisplayIntervalId) { clearInterval(thoughtDisplayIntervalId); thoughtDisplayIntervalId = null; }
+            if (thoughtDisplayElement) { thoughtDisplayElement.remove(); thoughtDisplayElement = null; }
+            activeThoughtsList = [];
+            summaryContainer.innerHTML = '';
+            const p = document.createElement('p');
+            p.textContent = message;
+            if (type === 'error') { p.className = 'error-text'; }
+            else if (type === 'warning') { p.className = 'warning-text'; }
+            else { p.className = 'placeholder-text'; }
+            summaryContainer.appendChild(p);
+        }
+
+        function ensureThoughtDisplayElement() {
+            if (!thoughtDisplayElement || !summaryContainer.contains(thoughtDisplayElement)) {
+                summaryContainer.innerHTML = '';
+                thoughtDisplayElement = document.createElement('div');
+                thoughtDisplayElement.className = 'cycling-thought';
+                summaryContainer.appendChild(thoughtDisplayElement);
+            }
+        }
+
+        function startThoughtCycle() {
+            if (thoughtDisplayIntervalId) { clearInterval(thoughtDisplayIntervalId); thoughtDisplayIntervalId = null; }
+            if (activeThoughtsList.length === 0) {
+                if (!summaryContainer.querySelector('.error-text') && !summaryContainer.querySelector('.warning-text')) {
+                    setSummaryContainerMessage("No thoughts to display.", "placeholder");
+                }
+                return;
+            }
+            ensureThoughtDisplayElement();
+            const displayNextThought = () => {
+                if (activeThoughtsList.length === 0 || !thoughtDisplayElement || !summaryContainer.contains(thoughtDisplayElement)) {
+                    if (thoughtDisplayIntervalId) clearInterval(thoughtDisplayIntervalId);
+                    thoughtDisplayIntervalId = null;
+                    return;
+                }
+                thoughtDisplayElement.textContent = activeThoughtsList[currentThoughtDisplayIndex];
+                thoughtDisplayElement.style.animation = 'none';
+                void thoughtDisplayElement.offsetWidth;
+                thoughtDisplayElement.style.animation = `thoughtCycleEffect ${THOUGHT_CYCLE_INTERVAL / 1000}s ease-in-out forwards`;
+                currentThoughtDisplayIndex = (currentThoughtDisplayIndex + 1) % activeThoughtsList.length;
+            };
+            displayNextThought();
+            if (activeThoughtsList.length > 1) {
+                thoughtDisplayIntervalId = setInterval(displayNextThought, THOUGHT_CYCLE_INTERVAL);
+            } else if (thoughtDisplayElement) {
+                thoughtDisplayElement.style.animation = `thoughtCycleEffect ${THOUGHT_CYCLE_INTERVAL / 1000}s ease-in-out`;
+                setTimeout(() => {
+                    if (thoughtDisplayElement && activeThoughtsList.length === 1) {
+                        thoughtDisplayElement.style.opacity = '1';
+                        thoughtDisplayElement.style.transform = 'scale(1) translateY(0px)';
+                    }
+                }, (THOUGHT_CYCLE_INTERVAL / 1000) * 0.2 * 1000);
+            }
+        }
+
+        function addToLog(entry) {
+            if (conversationLog) { conversationLog += "\n\n"; }
+            conversationLog += entry;
+            downloadButton.disabled = false;
+        }
+
+        async function fetchContextFromFile() {
+            try {
+                const response = await fetch(CONTEXT_FILE_PATH);
+                if (!response.ok) {
+                    console.warn(`Could not fetch context.txt: ${response.status} ${response.statusText}. Proceeding without it.`);
+                    return "";
+                }
+                const text = await response.text();
+                console.log("Successfully fetched context.txt");
+                return text.trim();
+            } catch (error) {
+                console.warn("Error fetching context.txt:", error, ". Proceeding without it.");
+                return "";
+            }
+        }
+
+        async function getThoughts(textToSummarize) {
+            if (isSummarizing) { console.log("Thought generation request already in progress. Skipping."); return; }
+
+            // MODIFIED: Read key from the global variable defined in config.js
+            const currentApiKey = typeof ANTHROPIC_API_KEY !== 'undefined' ? ANTHROPIC_API_KEY : '';
+
+            // MODIFIED: Check if the key is missing or is still the placeholder value.
+            if (!currentApiKey || currentApiKey === "YOUR_ANTHROPIC_API_KEY_HERE") {
+                console.error("Anthropic API Key not configured.");
+                summaryStatusDiv.textContent = "Error: API Key not configured.";
+                setSummaryContainerMessage("Please create 'config.js' from the template and add your Anthropic API Key.", "error");
+                return;
+            }
+            if (!textToSummarize || textToSummarize.trim().length === 0) {
+                console.log("No text to generate thoughts from.");
+                summaryStatusDiv.textContent = "Waiting for speech or text input...";
+                if (activeThoughtsList.length === 0) {
+                    setSummaryContainerMessage("Generated thoughts will appear here once speech/text is added...", "placeholder");
+                }
+                return;
+            }
+
+            isSummarizing = true;
+            summaryStatusDiv.textContent = "Generating thoughts (fetching context)...";
+            const fileContext = await fetchContextFromFile();
+            summaryStatusDiv.textContent = "Generating thoughts...";
+            console.log("Requesting thoughts for accumulated text:", textToSummarize.substring(0, 100) + "...");
+
+            const basePromptTemplate = `
+<system_instructions>
+You are an AI assistant. Your primary function is to generate insightful, philosophical, and artistic 'thoughts' based on provided background context and a recent conversation transcript, suitable for an art gallery environment. These thoughts will include both questions and statements that actively engage with the dialogue.
+Your response <must_be_json_only>a valid JSON array of strings</must_be_json_only>.
+<no_extra_text>ABSOLUTELY NO text, explanations, or conversational filler should precede or follow the JSON array. Your entire output must be the JSON array itself, starting with '[' and ending with ']'.</no_extra_text>
+</system_instructions>
+<task_definition>
+The goal is to generate 2-4 distinct 'thoughts' (aim for 3 if the context allows). Each thought must be concise (ideally 1-2 sentences) and can fall into one of these categories:
+1.  <thought_type_1>A leading or philosophical question that encourages deeper exploration of a topic, artwork, or concept mentioned.</thought_type_1>
+2.  <thought_type_2>A reflective question that queries an underlying assumption, emotion, interpretation, or implication within the transcript.</thought_type_2>
+3.  <thought_type_3>A connecting statement that links a point in the conversation to broader artistic theories, philosophical ideas, historical context, or the provided background material.</thought_type_3>
+4.  <thought_type_4>A dialogic engagement statement that directly comments on the speakers' contributions or the flow of the dialogue.</thought_type_4>
+</task_definition>
+<examples>
+<example><input><background_context>Exhibition Theme: "The Unseen Interface".</background_context><recent_transcript>Visitor A: "It's interesting how much of this piece is just empty space." Visitor B: "I agree. It forces my mind to fill in the gaps."</recent_transcript></input><expected_output>["Visitor B's comment on 'active participation' is spot on for 'The Unseen Interface' – the viewer completes the work.","How does the concept of 'empty space' challenge traditional notions of what constitutes an artwork?"]</expected_output></example>
+</examples>
+<output_format_final_reminder>
+<critical_instruction>Your entire response MUST be a JSON array of strings and nothing else. For example: ["Is art a mirror or a hammer?", "What is the nature of interpretation?"]</critical_instruction>
+</output_format_final_reminder>
+<current_request_data>
+<background_context_provided>{BACKGROUND_CONTEXT_PLACEHOLDER}</background_context_provided>
+<recent_transcript_provided>{RECENT_TRANSCRIPT_PLACEHOLDER}</recent_transcript_provided>
+</current_request_data>
+<instruction>
+Based *only* on the provided data, generate 2-4 'thoughts' as defined in the task. Output <must_be_json_only>ONLY the JSON array of strings</must_be_json_only> and absolutely nothing else.
+</instruction>`;
+
+            const maxTranscriptLength = 1500;
+            const relevantTranscript = textToSummarize.length > maxTranscriptLength ? textToSummarize.slice(-maxTranscriptLength) : textToSummarize;
+            let finalApiPromptContent = basePromptTemplate
+                .replace("{BACKGROUND_CONTEXT_PLACEHOLDER}", (fileContext && fileContext.trim() !== "") ? fileContext : "N/A - No specific background context was provided for this request.")
+                .replace("{RECENT_TRANSCRIPT_PLACEHOLDER}", relevantTranscript);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'x-api-key': currentApiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+                    body: JSON.stringify({ model: MODEL_NAME, max_tokens: 250, messages: [{ role: "user", content: finalApiPromptContent }] })
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `API Error: ${response.status} ${response.statusText}`;
+                    if (response.status === 401) { errorDetails += ` - Authentication failed. Check API Key in config.js.`; }
+                    else { try { const ed = await response.json(); errorDetails += ` - ${ed?.error?.message || JSON.stringify(ed)}`; } catch { errorDetails += ` - ${await response.text()}`; } }
+                    throw new Error(errorDetails);
+                }
+
+                const data = await response.json();
+                if (data.content && data.content.length > 0 && data.content[0].text) {
+                    const thoughtsText = data.content[0].text.trim();
+                    console.log("Generated thoughts (raw):", thoughtsText);
+                    addToLog(`[Listening Machine Thoughts]: ${thoughtsText}`);
+                    let newThoughts = [];
+                    try {
+                        newThoughts = JSON.parse(thoughtsText);
+                        if (!Array.isArray(newThoughts) || !newThoughts.every(item => typeof item === 'string')) {
+                            throw new Error("Parsed data is not an array of strings.");
+                        }
+                    } catch (parseError) {
+                        console.error("Error parsing thoughts JSON:", parseError);
+                        newThoughts = [`Error parsing. Raw: ${thoughtsText}`];
+                        setSummaryContainerMessage("Could not properly parse thoughts from API. Displaying raw output.", "warning");
+                    }
+                    if (newThoughts.length > 0) {
+                        activeThoughtsList = newThoughts.filter(th => th.length > 0 && th.length < 300);
+                        currentThoughtDisplayIndex = 0;
+                        startThoughtCycle();
+                        summaryStatusDiv.textContent = `Thoughts updated: ${new Date().toLocaleTimeString()}`;
+                    } else if (activeThoughtsList.length === 0) {
+                        setSummaryContainerMessage("The AI returned no new thoughts based on the transcript.", "warning");
+                    }
+                    lastSummaryTime = Date.now();
+                } else {
+                    console.warn("API response was successful but contained no text content.", data);
+                    summaryStatusDiv.textContent = "API returned an empty response.";
+                }
+            } catch (error) {
+                console.error("Error in getThoughts:", error);
+                summaryStatusDiv.textContent = "Error generating thoughts.";
+                setSummaryContainerMessage(`An error occurred: ${error.message}`, 'error');
+            } finally {
+                isSummarizing = false;
+            }
+        }
+
+        function startSummaryTimer() { // This timer now triggers getThoughts
+            stopSummaryTimer();
+            console.log("Starting thought generation timer.");
+            if (isRunning && !isPaused) {
+                if (apiKeyInput.value.trim()) { summaryStatusDiv.textContent = `Thoughts update every ${SUMMARY_INTERVAL / 1000}s.`; }
+                else { summaryStatusDiv.textContent = "API Key needed for thought updates."; }
+                summaryIntervalId = setInterval(() => {
+                    if (accumulatedTranscript.trim().length > 0 && apiKeyInput.value.trim() && !isSummarizing) {
+                        getThoughts(accumulatedTranscript); // Call getThoughts
+                    }
+                    else if (!apiKeyInput.value.trim()) { summaryStatusDiv.textContent = "API Key needed for thought updates."; }
+                    else if (isSummarizing) { console.log("Thought generation interval skipped: previous request running."); }
+                }, SUMMARY_INTERVAL);
+            } else {
+                summaryStatusDiv.textContent = "Thought updates paused (mic inactive).";
+            }
+        }
+
+        function stopSummaryTimer() {
+            if (summaryIntervalId) {
+                clearInterval(summaryIntervalId); summaryIntervalId = null; console.log("Stopped thought generation timer.");
+                if (!isPaused && !isRunning) { summaryStatusDiv.textContent = "Thought updates inactive."; }
+                else if (isPaused) { summaryStatusDiv.textContent = "Thought updates paused."; }
+            }
+        }
+
+        function addTextToTranscript(text, source = 'speech') {
+            if (transcriptCleared) { transcriptContainer.innerHTML = ''; transcriptCleared = false; }
+            const p = document.createElement('p');
+            let trimmedText = text.trim();
+            if (source === 'speech' && !/[.!?]$/.test(trimmedText)) { trimmedText += '.'; }
+            p.textContent = trimmedText;
+            p.classList.add('transcript-entry');
+            transcriptContainer.appendChild(p);
+            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+            if (source === 'speech' || source === 'manual') {
+                addToLog(trimmedText);
+            }
+        }
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-GB';
+            let finalTranscriptSegment = '';
+
+            recognition.onstart = () => {
+                isRunning = true; isPaused = false;
+                if (!apiKeyInput.value.trim()) {
+                    statusDiv.textContent = 'Status: Listening (API Key Required for Thoughts)';
+                    summaryStatusDiv.textContent = "API Key needed for thoughts.";
+                    if (activeThoughtsList.length === 0) {
+                        setSummaryContainerMessage("Please enter your Anthropic API Key above.", "error");
+                        if (settingsContainer.classList.contains('hidden')) { toggleSettings(); }
+                    }
+                } else {
+                    statusDiv.textContent = 'Status: Listening...';
+                    if (activeThoughtsList.length === 0 && !summaryContainer.querySelector('.error-text') && !summaryContainer.querySelector('.warning-text')) {
+                        setSummaryContainerMessage("Generated thoughts will appear shortly...", "placeholder");
+                    }
+                    if (!settingsContainer.classList.contains('hidden') && apiKeyInput.value.trim()) { toggleSettings(); }
+                }
+                console.log('Speech recognition started/resumed.');
+                pauseButton.textContent = 'Pause'; pauseButton.disabled = false;
+                pauseButton.classList.remove('hidden'); initialStartButton.classList.add('hidden');
+                startSummaryTimer(); // This will now trigger getThoughts
+            };
+
+            recognition.onend = () => {
+                console.log(`Speech recognition ended. isPaused: ${isPaused}, isRunning: ${isRunning}`);
+                isRunning = false;
+                if (!isPaused) {
+                    statusDiv.textContent = 'Status: Stopped (Click Resume/Start)';
+                    pauseButton.textContent = 'Resume'; pauseButton.disabled = false;
+                    stopSummaryTimer();
+                    if (accumulatedTranscript.trim().length > 0 && apiKeyInput.value.trim() && !isSummarizing) {
+                        console.log("Recognition ended unexpectedly, attempting final thought generation.");
+                        getThoughts(accumulatedTranscript); // Call getThoughts
+                    } else if (!apiKeyInput.value.trim()) {
+                        summaryStatusDiv.textContent = "Thought updates stopped (API Key required).";
+                    }
+                } else {
+                    statusDiv.textContent = 'Status: Paused';
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error, event.message);
+                let userMessage = `Error: ${event.error}. Paused.`; let alertMsg = `An error occurred: ${event.error}.`;
+                if (event.error === 'no-speech') { userMessage = 'Status: No speech detected. Listening might stop.'; alertMsg = null; isPaused = false; statusDiv.textContent = userMessage; return; }
+                else if (event.error === 'audio-capture') { userMessage = 'Status: Microphone error.'; alertMsg = "Could not access the microphone."; showMessage(alertMsg, 'error'); }
+                else if (event.error === 'not-allowed') { userMessage = 'Status: Microphone access denied.'; alertMsg = "Microphone access denied."; showMessage(alertMsg, 'error'); if (settingsContainer.classList.contains('hidden')) { toggleSettings(); } }
+                else { showMessage(alertMsg || `Speech Error: ${event.error}`, 'error'); }
+                statusDiv.textContent = userMessage;
+                isPaused = true; isRunning = false;
+                pauseButton.textContent = 'Resume'; pauseButton.disabled = false;
+                initialStartButton.classList.add('hidden'); pauseButton.classList.remove('hidden');
+                stopSummaryTimer();
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = ''; finalTranscriptSegment = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcriptPart = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) { finalTranscriptSegment += transcriptPart.trim() + ' '; }
+                    else { interimTranscript += transcriptPart; }
+                }
+                if (finalTranscriptSegment) {
+                    const cleanedSegment = finalTranscriptSegment.trim();
+                    if (cleanedSegment.length > 0) {
+                        addTextToTranscript(cleanedSegment, 'speech');
+                        accumulatedTranscript += cleanedSegment + '. ';
+                    }
+                }
+            };
+
+        } else {
+            statusDiv.textContent = 'Status: Speech recognition not supported.';
+            summaryStatusDiv.textContent = 'Mic input unavailable.';
+            initialStartButton.disabled = true;
+            pauseButton.classList.add('hidden');
+            setSummaryContainerMessage("Mic input not supported by browser.", "warning");
+            showMessage("Sorry, your browser doesn't support Web Speech API.", 'warning');
+            if (settingsContainer.classList.contains('hidden')) { toggleSettings(); }
+            downloadButton.disabled = true;
+        }
+
+        function toggleSettings() {
+            const isHidden = settingsContainer.classList.toggle('hidden');
+            settingsArrow.classList.toggle('arrow-up', !isHidden);
+            settingsArrow.classList.toggle('arrow-down', isHidden);
+            settingsContainer.style.maxHeight = isHidden ? '0' : settingsContainer.scrollHeight + "px";
+        }
+
+        function downloadTranscript() {
+            if (!conversationLog) { showMessage("Nothing to download yet.", "info"); return; }
+            const blob = new Blob([conversationLog], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url; link.download = 'listening-machine-transcript.txt';
+            document.body.appendChild(link); link.click();
+            document.body.removeChild(link); URL.revokeObjectURL(url);
+        }
+
+        settingsToggle.addEventListener('click', toggleSettings);
+        downloadButton.addEventListener('click', downloadTranscript);
+
+        initialStartButton.addEventListener('click', () => {
+            if (!apiKeyInput.value.trim()) {
+                showMessage("Please enter API Key in Settings.", 'warning');
+                setSummaryContainerMessage("API Key required for thoughts.", "warning");
+                if (settingsContainer.classList.contains('hidden')) { toggleSettings(); }
+                return;
+            }
+            if (recognition && !isRunning) {
+                conversationLog = ""; downloadButton.disabled = true;
+                finalTranscriptSegment = ''; accumulatedTranscript = "";
+                transcriptContainer.innerHTML = '<p class="text-gray-500">Listening...</p>'; transcriptCleared = false;
+                if (apiKeyInput.value.trim() && activeThoughtsList.length === 0) {
+                    setSummaryContainerMessage("Generated thoughts will appear shortly...", "placeholder");
+                }
+                isPaused = false;
+                try { recognition.start(); initialStartButton.disabled = true; statusDiv.textContent = 'Status: Starting...'; }
+                catch (e) { console.error("Error starting recognition:", e); statusDiv.textContent = 'Status: Error starting.'; showMessage(`Could not start listening: ${e.message}.`, 'error'); initialStartButton.disabled = false; }
+            }
+        });
+
+        pauseButton.addEventListener('click', () => {
+            if (!recognition) return;
+            if (isPaused) { // Resume
+                if (!apiKeyInput.value.trim()) { showMessage("Please enter API Key before resuming.", 'warning'); if (settingsContainer.classList.contains('hidden')) { toggleSettings(); } return; }
+                isPaused = false;
+                try { recognition.start(); pauseButton.textContent = 'Pause'; pauseButton.disabled = true; statusDiv.textContent = 'Status: Resuming...'; }
+                catch (e) { console.error("Error resuming recognition:", e); statusDiv.textContent = 'Status: Error resuming.'; showMessage(`Could not resume: ${e.message}.`, 'error'); isPaused = true; pauseButton.textContent = 'Resume'; pauseButton.disabled = false; }
+            } else { // Pause
+                isPaused = true; isRunning = false; recognition.stop(); stopSummaryTimer();
+                pauseButton.textContent = 'Resume'; pauseButton.disabled = false; statusDiv.textContent = 'Status: Pausing...';
+                if (accumulatedTranscript.trim().length > 0 && apiKeyInput.value.trim() && !isSummarizing) {
+                    getThoughts(accumulatedTranscript); // Call getThoughts
+                }
+            }
+        });
+
+        addTextButton.addEventListener('click', () => {
+            const text = testInputArea.value.trim();
+            if (text) {
+                if (transcriptCleared) { transcriptContainer.innerHTML = ''; transcriptCleared = false; }
+                addTextToTranscript(text, 'manual');
+                accumulatedTranscript += text + '. ';
+                testInputArea.value = '';
+                if (!apiKeyInput.value.trim()) {
+                    summaryStatusDiv.textContent = "Text added (API Key required for thoughts).";
+                    if (activeThoughtsList.length === 0 && !summaryContainer.querySelector('.error-text') && !summaryContainer.querySelector('.warning-text')) {
+                        setSummaryContainerMessage("Please enter API Key for thoughts.", "warning");
+                        if (settingsContainer.classList.contains('hidden')) { toggleSettings(); }
+                    }
+                } else {
+                    summaryStatusDiv.textContent = "Text added. Generating thoughts...";
+                    if (!isSummarizing) { getThoughts(accumulatedTranscript); } // Call getThoughts
+                    else { summaryStatusDiv.textContent = "Text added. Thoughts generating..."; }
+                }
+            } else { showMessage("Please enter some text first.", "info"); }
+        });
+
+        apiKeyInput.addEventListener('input', () => {
+            if (apiKeyInput.value.trim()) {
+                if ((summaryContainer.querySelector('.error-text') || summaryContainer.querySelector('.warning-text')) && activeThoughtsList.length === 0) {
+                    setSummaryContainerMessage("API Key entered. Ready for thoughts.", "placeholder");
+                }
+                if (summaryStatusDiv.textContent.includes("API Key required") || summaryStatusDiv.textContent.includes("API Key needed")) {
+                    summaryStatusDiv.textContent = "API Key detected.";
+                }
+                if (isRunning && !isPaused) { startSummaryTimer(); }
+            } else {
+                summaryStatusDiv.textContent = "API Key required for thought updates.";
+                setSummaryContainerMessage("Please enter your Anthropic API Key.", "error");
+                if (thoughtDisplayIntervalId) { clearInterval(thoughtDisplayIntervalId); thoughtDisplayIntervalId = null; }
+                activeThoughtsList = [];
+                stopSummaryTimer();
+            }
+        });
+
+        settingsContainer.style.maxHeight = '0';
+        if (!SpeechRecognition || !apiKeyInput.value.trim()) {
+            if (SpeechRecognition && !apiKeyInput.value.trim() && activeThoughtsList.length === 0) {
+                setSummaryContainerMessage("Please enter API Key in Settings to see thoughts.", "warning");
+            }
+        }
+    </script>
+
+</body>
+
+</html>
