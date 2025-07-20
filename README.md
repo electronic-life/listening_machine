@@ -1,7 +1,13 @@
+
 ## `Listening Machine`
 An extremely lightweight web-based application designed for provoking reflective cycles in art, culture, and society. Listening machine observes ambient conversation, transcribes it in real-time, and uses an LLM to generate provoking "thoughts" based on what it hears. These insights are then cycled through during the ongoing conversation, adding a layer of interactive contemplation to the environment, a dialogue. 
 
 ### Features
+
+
+
+<img src="https://raw.githubusercontent.com/electronic-life/listening_machine/refs/heads/main/image1c.jpg" alt="listening_machine" title="listening_machine" align="right" height="300" />
+
 
 -   **Real-time Speech Transcription**: Uses the browser's built-in Web Speech API to capture and transcribe speech.
 -   **AI-Powered Reflection**: Periodically sends the transcript to an AI to generate related questions, statements, and connections.
