@@ -1,5 +1,5 @@
-## Listening Machine 
-The Listening Machine is an extremely light weight web-based application designed for provoking reflective cycles in art, culture, and society. It listens to ambient conversation, transcribes it in real-time, and uses an LLM to generate provoking "thoughts" based on what it hears. These insights are then cycled through during the ongoing conversation, adding a layer of interactive contemplation to the environment, a dialogue. 
+## `Listening Machine`
+An extremely lightweight web-based application designed for provoking reflective cycles in art, culture, and society. Listening machine observes ambient conversation, transcribes it in real-time, and uses an LLM to generate provoking "thoughts" based on what it hears. These insights are then cycled through during the ongoing conversation, adding a layer of interactive contemplation to the environment, a dialogue. 
 
 ### Features
 
