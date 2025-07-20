@@ -47,7 +47,7 @@ You can give the Listening Machine background information to make its thoughts m
 
 #### ▶️ Running the Application
 
-No web server is required. Simply **open the `index.html` file** in your web browser.
+No web server is required. Simply **open the `main.html` file** in your web browser.
 
 1.  **Grant Microphone Access**: The browser will ask for permission to use your microphone. You must allow this for speech transcription to work.
 2.  **Start Listening**: Click the "Start Listening" button to begin.
