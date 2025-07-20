@@ -1,8 +1,7 @@
-# Listening Machine 
-# 
-The Listening Machine is a web-based application designed for art installations, galleries, or personal reflection. It actively listens to ambient conversation, transcribes it in real-time, and uses an LLM (Anthropic's Claude 3 Haiku) to generate insightful, philosophical, or artistic "thoughts" based on what it hears. These generated thoughts are then displayed in a cycling animation, adding a layer of interactive contemplation to the environment.
+## Listening Machine 
+The Listening Machine is an extremely light weight web-based application designed for provoking reflective cycles in art, culture, and society. It listens to ambient conversation, transcribes it in real-time, and uses an LLM to generate provoking "thoughts" based on what it hears. These insights are then cycled through during the ongoing conversation, adding a layer of interactive contemplation to the environment, a dialogue. 
 
-## Features
+### Features
 
 -   **Real-time Speech Transcription**: Uses the browser's built-in Web Speech API to capture and transcribe speech.
 -   **AI-Powered Reflection**: Periodically sends the transcript to an AI to generate related questions, statements, and connections.
@@ -12,16 +11,16 @@ The Listening Machine is a web-based application designed for art installations,
 -   **Transcript Download**: Allows the user to download a full log of the transcribed conversation and the AI's thoughts.
 -   **Secure Configuration**: Keeps your API key out of the main code and version control.
 
-## Getting Started
+### Getting Started
 
-### Prerequisites
+#### Prerequisites
 
 1.  A modern web browser with support for the Web Speech API (Google Chrome is recommended).
 2.  An API key from [Anthropic](https://www.anthropic.com/claude).
 
-### ⚙️ Configuration
+#### ⚙️ Configuration
 
-To run the application, you need to provide your Anthropic API key.
+To run the application, you need to provide your Anthropic API key. This can be obtained from the [Anthropic website](https://console.anthropic.com/login?returnTo=%2F%3F), or via a colleague 
 
 1.  **Add Your API Key**: Open the `config.js` file and replace the placeholder text with your actual Anthropic API key.
 
@@ -32,7 +31,7 @@ To run the application, you need to provide your Anthropic API key.
 
 2.  **Security Note**: The `config.js` file contains your secret API key. **Do not** commit this file to public or private Git repositories. If you are using Git, add `config.js` to your `.gitignore` file.
 
-### (Optional) Providing Context
+#### (Optional) Providing Context
 
 You can give the Listening Machine background information to make its thoughts more relevant to a specific topic or environment.
 
@@ -40,7 +39,7 @@ You can give the Listening Machine background information to make its thoughts m
 -   Add any relevant text to this file—an artist's statement, an exhibition summary, philosophical concepts, etc.
 -   The application will automatically fetch this context and include it in its requests to the AI. If the file is not found, it will proceed without it.
 
-### ▶️ Running the Application
+#### ▶️ Running the Application
 
 No web server is required. Simply **open the `index.html` file** in your web browser.
 
@@ -48,7 +47,7 @@ No web server is required. Simply **open the `index.html` file** in your web bro
 2.  **Start Listening**: Click the "Start Listening" button to begin.
 3.  **Interact**: Speak naturally. Your words will appear in the "Transcript" box. After a minute of speech, the "Thoughts" section will update with the AI's reflections.
 
-## 🛠️ How It Works
+### 🛠️ How It Works
 
 -   **Frontend**: The entire application runs in the browser using HTML, CSS (Tailwind), and vanilla JavaScript.
 -   **Speech-to-Text**: The [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) listens to the microphone and converts speech into text.
